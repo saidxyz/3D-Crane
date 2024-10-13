@@ -2,7 +2,6 @@ import '../../style.css';
 import * as THREE from "three";
 import { TrackballControls } from 'three/examples/jsm/controls/TrackballControls';
 import {addCoordSystem} from "../../../static/lib/wfa-coord.js";
-import {createBoxmanMesh} from "./helper.js";
 import {createArm,} from "./helper.js";
 
 const ri = {
@@ -12,6 +11,7 @@ const ri = {
 export function main() {
     const canvas = document.createElement('canvas');
     document.body.appendChild(canvas);
+
     // Renderer:
     ri.renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
     ri.renderer.setSize(window.innerWidth, window.innerHeight);
@@ -69,14 +69,6 @@ function addSceneObjects() {
         '../../../assets/textures/metal1.jpg',
         (textureObject)=> {
             //Fortsetter her når nedlastinger er ferdig!
-
-            let meshTorso = createBoxmanMesh(textureObject);
-            meshTorso.position.y = 20;
-            ri.scene.add(meshTorso);
-
-            // Alternativt eget koordinatsystem:
-            addCoordSystem(ri.scene);
-
             // Plan:
             let gPlane = new THREE.PlaneGeometry(600, 600, 10, 10);
             let mPlane = new THREE.MeshLambertMaterial({ color: 0x91aff11, side: THREE.DoubleSide, wireframe:false });
@@ -87,9 +79,8 @@ function addSceneObjects() {
 
             // Armen:
             let arm = createArm(textureObject);
-            arm.position.x = 120;
-            arm.position.z = -250;
-            //arm.position.y = 50;
+            arm.position.x = -120;
+            arm.position.z = -5;
             arm.name = "arm";
             arm.armYRot = 0.0;
             arm.joint1XRot = Math.PI/4;
@@ -130,16 +121,6 @@ function addSceneObjects() {
 }
 
 function addLights() {
-
-    let light1 = new THREE.DirectionalLight(0xffffff, 1.0); //farge, intensitet (1=default)
-    light1.position.set(2, 1, 4);
-    ri.scene.add(light1);
-
-    let light2 = new THREE.DirectionalLight(0xffffff, 1.0); //farge, intensitet (1=default)
-    light2.position.set(-2, -1, -4);
-    ri.scene.add(light2);
-
-
     //Retningsorientert lys (som gir skygge):
     let directionalLight1 = new THREE.DirectionalLight(0xffffff, 1.0); //farge, intensitet (1=default)
     directionalLight1.position.set(0, 300, 0);
@@ -161,49 +142,8 @@ function animate(currentTime) {
     window.requestAnimationFrame((currentTime) => {
         animate(currentTime);
     });
-    const delta = ri.clock.getDelta();
 
-
-    //Truck platform (root objektet)
-    let meshTorso = ri.scene.getObjectByName("torso");
-    meshTorso.scale.set(18,0.2,14);
-
-    //HØYRE ARM (over&under):
-    let meshRightUpperArm = meshTorso.getObjectByName('rightUpperArm', true);
-    let meshRightLowerArm = meshTorso.getObjectByName('rightLowerArm', true);
-    //Merk: finner opprinnelig størrelser.
-    let rightUpperArmWidth = meshRightUpperArm.geometry.parameters.width;
-    let rightLowerArmWidth = meshRightLowerArm.geometry.parameters.width;
-
-    meshRightUpperArm.translateX(-rightUpperArmWidth/2);
-    // Roter (her om Z-aksen):
-    meshRightUpperArm.rotation.z = meshRightUpperArm.animation.angle;
-    // Flytt meshet tilbake (langs X):
-    meshRightUpperArm.translateX(rightUpperArmWidth/2);
-
-    // Roterer Right Lower Arm om albueleddet:
-    meshRightLowerArm.translateX(-rightLowerArmWidth / 2);
-    meshRightLowerArm.rotation.z = meshRightLowerArm.animation.angle;
-    meshRightLowerArm.translateX(rightLowerArmWidth / 2);
-
-    //VENSTRE ARM (over&under)
-    let meshLeftUpperArm = meshTorso.getObjectByName('leftUpperArm', true);
-    let meshLeftLowerArm = meshTorso.getObjectByName('leftLowerArm', true);
-    //Merk: finner opprinnelig størrelser.
-    let leftUpperArmWidth = meshLeftUpperArm.geometry.parameters.width;
-    let leftLowerArmWidth = meshLeftLowerArm.geometry.parameters.width;
-
-    meshLeftUpperArm.translateX(leftUpperArmWidth / 2);
-    meshLeftUpperArm.rotation.z = meshLeftUpperArm.animation.angle;
-    meshLeftUpperArm.translateX(-leftUpperArmWidth / 2);
-
-    meshLeftLowerArm.translateX(leftLowerArmWidth / 2);
-    meshLeftLowerArm.rotation.z = meshLeftLowerArm.animation.angle;
-    meshLeftLowerArm.translateX(-leftLowerArmWidth / 2);
-
-
-
-
+    let delta = ri.clock.getDelta();
     let elapsed = ri.clock.getElapsedTime();
 
     //Oppdater trackball-kontrollen:
@@ -246,54 +186,30 @@ function animate(currentTime) {
 
 
     //Sjekker input:
-    handleKeys(delta, arm, meshRightUpperArm, meshRightLowerArm, meshLeftUpperArm, meshLeftLowerArm);
-
-    //Oppdater trackball-kontrollen:
-    ri.controls.update();
+    handleKeys(delta, arm);
 
     //Tegner scenen med gitt kamera:
     renderScene();
 }
 
+function renderScene()
+{
+    ri.renderer.render(ri.scene, ri.camera);
+}
+
+
+function onWindowResize() {
+    ri.camera.aspect = window.innerWidth / window.innerHeight;
+    ri.camera.updateProjectionMatrix();
+    ri.renderer.setSize(window.innerWidth, window.innerHeight);
+    ri.controls.handleResize();
+    renderScene();
+}
+
 //Sjekker tastaturet:
-function handleKeys(delta, arm, meshRightUpperArm, meshRightLowerArm, meshLeftUpperArm, meshLeftLowerArm) {
+function handleKeys(delta, arm) {
     let rotationSpeed = (Math.PI); // Bestemmer rotasjonshastighet.
 
-    //RIGHT ARM:
-    if (ri.currentlyPressedKeys['KeyA']) { //A
-        meshRightLowerArm.animation.angle = meshRightLowerArm.animation.angle + (rotationSpeed * delta);
-        meshRightLowerArm.animation.angle %= (Math.PI * 2);
-    }
-    if (ri.currentlyPressedKeys['KeyD']) {	//D
-        meshRightLowerArm.animation.angle = meshRightLowerArm.animation.angle - (rotationSpeed * delta);
-        meshRightLowerArm.animation.angle %= (Math.PI * 2);
-    }
-
-    if (ri.currentlyPressedKeys['KeyS']) {	//S
-        meshRightUpperArm.animation.angle = meshRightUpperArm.animation.angle + (rotationSpeed * delta);
-        meshRightUpperArm.animation.angle %= (Math.PI * 2);
-    }
-    if (ri.currentlyPressedKeys['KeyW']) {	//W
-        meshRightUpperArm.animation.angle = meshRightUpperArm.animation.angle - (rotationSpeed * delta);
-        meshRightUpperArm.animation.angle %= (Math.PI * 2);
-    }
-    // LEFT ARM
-    if (ri.currentlyPressedKeys['KeyH']) { //H
-        meshLeftLowerArm.animation.angle = meshLeftLowerArm.animation.angle + (rotationSpeed * delta);
-        meshLeftLowerArm.animation.angle %= (Math.PI * 2);
-    }
-    if (ri.currentlyPressedKeys['KeyK']) { //K
-        meshLeftLowerArm.animation.angle = meshLeftLowerArm.animation.angle - (rotationSpeed * delta);
-        meshLeftLowerArm.animation.angle %= (Math.PI * 2);
-    }
-    if (ri.currentlyPressedKeys['KeyJ']) { //J
-        meshLeftUpperArm.animation.angle = meshLeftUpperArm.animation.angle + (rotationSpeed * delta);
-        meshLeftUpperArm.animation.angle %= (Math.PI * 2);
-    }
-    if (ri.currentlyPressedKeys['KeyU']) { //U
-        meshLeftUpperArm.animation.angle = meshLeftUpperArm.animation.angle - (rotationSpeed * delta);
-        meshLeftUpperArm.animation.angle %= (Math.PI * 2);
-    }
     //Roter foten om Y-AKSEN:
     if (ri.currentlyPressedKeys['KeyA']) { //A
         arm.armYRot = arm.armYRot + (rotationSpeed * delta);
@@ -314,7 +230,6 @@ function handleKeys(delta, arm, meshRightUpperArm, meshRightLowerArm, meshLeftUp
         arm.joint1XRot %= (Math.PI * 2); // "Rull rundt" dersom arm.joint1XRot >= 360 grader.
     }
 
-
     //Roter overarmen om X-AKSEN:
     if (ri.currentlyPressedKeys['KeyV']) { //V
         arm.joint2XRot = arm.joint2XRot + (rotationSpeed * delta);
@@ -324,16 +239,4 @@ function handleKeys(delta, arm, meshRightUpperArm, meshRightLowerArm, meshLeftUp
         arm.joint2XRot = arm.joint2XRot - (rotationSpeed * delta);
         arm.joint2XRot %= (Math.PI * 2); // "Rull rundt" dersom arm.joint2XRot >= 360 grader.
     }
-}
-function renderScene() {
-    ri.renderer.render(ri.scene, ri.camera);
-}
-
-
-function onWindowResize() {
-    ri.camera.aspect = window.innerWidth / window.innerHeight;
-    ri.camera.updateProjectionMatrix();
-    ri.renderer.setSize(window.innerWidth, window.innerHeight);
-    ri.controls.handleResize();
-    renderScene();
 }
