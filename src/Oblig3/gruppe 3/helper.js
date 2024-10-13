@@ -3,6 +3,99 @@
  */
 import * as THREE from "three";
 
+
+export function createBoxmanMesh(textureObject) {
+	let mat = new THREE.MeshPhongMaterial({ map: textureObject });
+
+	//Størrelser:
+	const tW = 10, tH=10, tD=5; //torso-Width, Height, Depth
+	const ruaW = 1.0;      //right upper arm width
+	const rlaW = ruaW*0.7;  //right lower arm width
+	const raH = tH/5.0;    //right arm height
+	const raD=raH/5;	        //right arm depth
+	const luaW = 6.0;       //left upper arm width
+	const llaW = luaW*1.4;  //left lower arm width
+	const laH = tH/10.0;    //left arm height
+	const laD=laH;	        //left arm depth
+
+	//Geometri-objekter:
+	const geoTorso = new THREE.BoxGeometry(tW, tH, tD);
+	const geoRUA = new THREE.BoxGeometry(ruaW, raH, raD);
+	const geoRLA = new THREE.BoxGeometry(rlaW, raH, raD);
+	const geoLUA = new THREE.BoxGeometry(luaW, laH, laD);
+	const geoLLA = new THREE.BoxGeometry(llaW, laH, laD);
+
+	//Rotmesh:
+	const meshTorso = new THREE.Mesh(geoTorso, mat);
+	meshTorso.position.set(20, 0, -24);
+	meshTorso.name = 'torso';
+
+	// *** Skriver ut .position og getWorldPosition():
+	console.log("torso.position");
+	console.log(meshTorso.position);
+	const target = new THREE.Vector3();
+	meshTorso.getWorldPosition(target);
+	console.log("torso.getWorldPosition()");
+	console.log(target);
+	// ***
+
+	//Right Upper Arm:
+	const meshRUA = new THREE.Mesh(geoRUA, mat);
+	meshRUA.name = 'rightUpperArm';
+	meshRUA.animation = { angle: 0 };
+	//Flytter OPP i forhold til torsoen.
+	meshRUA.translateY(tH / 2);
+	//Flytter til høyre = halvparten av torsoens bredde og halparten av egen bredde:
+	meshRUA.translateX(tW / 2 + ruaW / 2);
+	meshTorso.add(meshRUA);
+	const axisHelperRUA = new THREE.AxesHelper(30);
+	meshRUA.add(axisHelperRUA);
+	// *** Skriver ut .position og getWorldPosition():
+	console.log("meshRUA.position");
+	console.log(meshRUA.position);
+	const target1 = new THREE.Vector3();
+	meshRUA.getWorldPosition(target1);
+	console.log("meshRUA.getWorldPosition()");
+	console.log(target1);
+	// ***
+
+	//Right Lower Arm:
+	const meshRLA = new THREE.Mesh(geoRLA, mat);
+	meshRLA.name = 'rightLowerArm';
+	meshRLA.animation = { angle: 0 };
+	//Flytter til HØYRE = ruaW/2 og rlaW/2:
+	meshRLA.translateX(ruaW/2 + rlaW/2);
+	//Legges til overarmen:
+	meshRUA.add(meshRLA);
+	const axisHelperRLA = new THREE.AxesHelper(30);
+	meshRLA.add(axisHelperRLA);
+	//*** Skriver ut .position og getWorldPosition():
+	console.log("meshRLA.position");
+	console.log(meshRLA.position);
+	const target2 = new THREE.Vector3();
+	meshRLA.getWorldPosition(target2);
+	console.log("meshRLA.getWorldPosition()");
+	console.log(target2);
+	//***
+
+	//Left Upper Arm:
+	const meshLUA = new THREE.Mesh(geoLUA, mat);
+	meshLUA.name = 'leftUpperArm';
+	meshLUA.animation = { angle: 0 };
+	meshLUA.translateY(tH / 2);	              //Flytter OPP i forhold til torsoen.
+	meshLUA.translateX(-tW / 2 - luaW / 2);   //Flytter til VENSTRE i forhold til torsoen og halvparten av egen størrelse.
+	meshTorso.add(meshLUA);
+	//Left Lower Arm:
+	const meshLLA = new THREE.Mesh(geoLLA, mat);
+	meshLLA.name = 'leftLowerArm';
+	meshLLA.animation = { angle: 0 };
+	meshLLA.translateX(-luaW/2-llaW/2);   //Flytter til VENSTRE = -luaW/2-llaW/2
+	meshLUA.add(meshLLA);        //Legges til overarmen.
+
+	return meshTorso;
+}
+
+
 export function createArm(textureObject) {
 	//Konteiner for hele armen:
 	const baseGroup = new THREE.Group();
