@@ -27,7 +27,7 @@ export function createBoxmanMesh(textureObject) {
 
 	//Rotmesh:
 	const meshTorso = new THREE.Mesh(geoTorso, mat);
-	meshTorso.position.set(20, 0, -24);
+	meshTorso.position.set(0, 0, 0);
 	meshTorso.name = 'torso';
 
 	// *** Skriver ut .position og getWorldPosition():
@@ -44,9 +44,11 @@ export function createBoxmanMesh(textureObject) {
 	meshRUA.name = 'rightUpperArm';
 	meshRUA.animation = { angle: 0 };
 	//Flytter OPP i forhold til torsoen.
-	meshRUA.translateY(tH / 2);
+	meshRUA.translateY(10);
 	//Flytter til høyre = halvparten av torsoens bredde og halparten av egen bredde:
-	meshRUA.translateX(tW / 2 + ruaW / 2);
+	meshRUA.translateX(0);
+	meshRUA.translateZ(3)
+	meshRUA.rotateY(Math.PI/2);
 	meshTorso.add(meshRUA);
 	const axisHelperRUA = new THREE.AxesHelper(30);
 	meshRUA.add(axisHelperRUA);
@@ -64,7 +66,7 @@ export function createBoxmanMesh(textureObject) {
 	meshRLA.name = 'rightLowerArm';
 	meshRLA.animation = { angle: 0 };
 	//Flytter til HØYRE = ruaW/2 og rlaW/2:
-	meshRLA.translateX(ruaW/2 + rlaW/2);
+	meshRLA.translateX(0);
 	//Legges til overarmen:
 	meshRUA.add(meshRLA);
 	const axisHelperRLA = new THREE.AxesHelper(30);
