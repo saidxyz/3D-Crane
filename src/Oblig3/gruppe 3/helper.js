@@ -61,7 +61,7 @@ export function createPassengerSetMesh() {
 
 export function createRimSetMesh() {
 	const geometry = new THREE.BoxGeometry(5, 1, 0.5, 32); // Cylinder shape for the rim
-	const material = new THREE.MeshBasicMaterial({ color: 0xF00D0F });
+	const material = new THREE.MeshBasicMaterial({ color: 0xFF0D0F });
 	const mesh = new THREE.Mesh(geometry, material);
 	return mesh;
 }
