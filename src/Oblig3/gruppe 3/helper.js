@@ -43,8 +43,7 @@ export function createWheelMesh() {
 	let rimGeometry = new THREE.CylinderGeometry(0.6, 0.6, 0.6, 32);
 	let rimMaterial = new THREE.MeshPhongMaterial({ color: 0xCCCCCC });
 	let rimMesh = new THREE.Mesh(rimGeometry, rimMaterial);
-	//rimMesh.rotation.z = Math.PI / 2;
-	//rimMesh.rotation.x = Math.PI / 2;
+	tireMesh.rotation.y = Math.PI / 2;
 
 	tireMesh.add(rimMesh);
 

@@ -139,19 +139,19 @@ function createCrane() {
 	// Add crane arms
 	let craneArms = addCraneArms(craneBase, craneBaseDiameter, craneHeight);
 
-	// Add wheels and get references to the front wheels
-	let frontWheels = addWheels(craneBase, backWheelOffset);
+	// Add wheels and get references to the wheels to be steered
+	let wheelsToSteer = addWheels(craneBase, backWheelOffset);
 
 	// Add passenger and rim components
 	addPassengerAndRim(craneBase);
 
-	// Store craneArms and frontWheels in craneBase for later reference
+	// Store craneArms and wheelsToSteer in craneBase for later reference
 	craneBase.craneArms = craneArms;
-	craneBase.frontWheels = frontWheels;
+	craneBase.wheelsToSteer = wheelsToSteer;
 
 	// Initialize steering properties
 	craneBase.steeringAngle = 0;
-	craneBase.maxSteeringAngle = Math.PI / 6; // Maximum steering angle (30 degrees)
+	craneBase.maxSteeringAngle = Math.PI / 3; // Maximum steering angle (60 degrees)
 
 	return craneBase;
 }
@@ -176,34 +176,41 @@ function addCraneArms(craneBase, craneBaseDiameter, craneHeight) {
 
 function addWheels(craneBase, backWheel) {
 	const wheelPositions = [
-		{ x: -(backWheel + 6), y: -2, z: 2 },
-		{ x: -(backWheel + 6), y: -2, z: -2 },
-		{ x: -(backWheel + 3), y: -2, z: 2 },
-		{ x: -(backWheel + 3), y: -2, z: -2 },
-		{ x: (backWheel + 6), y: -2, z: 2 },
-		{ x: (backWheel + 6), y: -2, z: -2 },
-		{ x: (backWheel + 3), y: -2, z: 2 },
-		{ x: (backWheel + 3), y: -2, z: -2 },
-		{ x: backWheel, y: -2, z: 2 },
-		{ x: backWheel, y: -2, z: -2 }
+		{ x: -(backWheel + 6), y: -2, z: 2 },  // index 0
+		{ x: -(backWheel + 6), y: -2, z: -2 }, // index 1
+		{ x: -(backWheel + 3), y: -2, z: 2 },  // index 2
+		{ x: -(backWheel + 3), y: -2, z: -2 }, // index 3
+		{ x: (backWheel + 6), y: -2, z: 2 },   // index 4
+		{ x: (backWheel + 6), y: -2, z: -2 },  // index 5
+		{ x: (backWheel + 3), y: -2, z: 2 },   // index 6
+		{ x: (backWheel + 3), y: -2, z: -2 },  // index 7
+		{ x: backWheel, y: -2, z: 2 },         // index 8
+		{ x: backWheel, y: -2, z: -2 }         // index 9
 	];
 
-	let frontWheels = []; // Array to hold references to the front wheels
+	let wheelsToSteer = []; // Array to hold references to the wheels to be steered
+
+	const wheelsToRotateIndices = [0, 1, 2, 3]; // Indices of wheels to rotate (front and back wheels)
 
 	wheelPositions.forEach((position, index) => {
 		let wheel = createWheelMesh();
 		wheel.position.set(position.x, position.y, position.z);
-		craneBase.add(wheel);
 
-		// If this is one of the front wheels (first 4), store a reference to it
-		if (index < 4) {
-			frontWheels.push(wheel);
+		// If this is one of the wheels to be steered, apply initial left-facing rotation
+		if (wheelsToRotateIndices.includes(index)) {
+			// Increase the initial rotation to rotate more to the left
+			wheel.rotation.y = Math.PI / 2;  // Rotate left (90 degrees)
+			wheel.initialRotationY = wheel.rotation.y; // Store initial rotation
+			wheelsToSteer.push(wheel);  // Store wheels to steer
 		}
+
+		craneBase.add(wheel);
 	});
 
-	// Return the array of front wheels
-	return frontWheels;
+	// Return the array of wheels for steering control
+	return wheelsToSteer;
 }
+
 
 function addPassengerAndRim(craneBase) {
 	let passenger = createPassengerSetMesh();
@@ -269,7 +276,7 @@ function animate(currentTime) {
 	let crane = ri.scene.getObjectByName('platform');
 
 	let craneArms = crane.craneArms;
-	let frontWheels = crane.frontWheels;
+	let wheelsToSteer = crane.wheelsToSteer;
 
 	// Update positions of the crane arms
 	for (let i = 0; i < craneArms.length; i++) {
@@ -280,9 +287,9 @@ function animate(currentTime) {
 		}
 	}
 
-	// Apply steering angle to front wheels
-	frontWheels.forEach(wheel => {
-		wheel.rotation.y = crane.steeringAngle;
+	// Apply steering angle to wheels
+	wheelsToSteer.forEach(wheel => {
+		wheel.rotation.y = wheel.initialRotationY + crane.steeringAngle;
 	});
 
 	// Check input
