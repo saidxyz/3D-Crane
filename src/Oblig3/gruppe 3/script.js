@@ -295,7 +295,7 @@ function createEngineBase(armNumber, craneHeight) {
 
 function addLights() {
 
-	//TODO: implement lights correctly
+	//TODO: implement lights correctly!
 	//** RETNINGSORIENTERT LYS (som gir skygge):
 	let directionalLight = new THREE.DirectionalLight(0x11ff00, 0.3);
 	directionalLight.visible = false;

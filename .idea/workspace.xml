@@ -4,18 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="106bf7ef-beac-46e8-b141-04e2b1201e9d" name="Changes" comment="committing to save changes">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/chunk-RSROGMPJ.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/chunk-RSROGMPJ.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/three.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/three.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/three.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/three.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Oblig3/gruppe 3/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/Oblig3/gruppe 3/script.js" afterDir="false" />
-    </list>
+    <list default="true" id="106bf7ef-beac-46e8-b141-04e2b1201e9d" name="Changes" comment="fixed crane leg animations" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -91,6 +80,14 @@
       <updated>1728840963915</updated>
       <workItem from="1728840965209" duration="12827000" />
     </task>
+    <task id="LOCAL−00001" summary="fixed crane leg animations">
+      <option name="closed" value="true" />
+      <created>1728944119968</created>
+      <option name="number" value="LOCAL−00001" />
+      <option name="presentableId" value="LOCAL−00001" />
+      <updated>1728944119968</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -106,5 +103,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="fixed crane leg animations" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed crane leg animations" />
   </component>
 </project>
