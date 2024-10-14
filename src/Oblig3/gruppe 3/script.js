@@ -24,6 +24,10 @@ export function main() {
 	ri.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 	ri.renderer.setSize(window.innerWidth, window.innerHeight);
 
+	// Add shadows
+	ri.renderer.shadowMap.enabled = true; //NB!
+	ri.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
 	// Scene
 	ri.scene = new THREE.Scene();
 	ri.scene.background = new THREE.Color(0xdddddd);
@@ -54,7 +58,7 @@ export function main() {
 }
 
 // Handle keyboard input
-function handleKeys(delta, arms, crane) {
+function handleKeys(delta, arms, legs, crane) {
 	// Arms:
 	if (ri.currentlyPressedKeys['Digit4']) { // 4
 		for (let arm of arms) {
@@ -73,15 +77,33 @@ function handleKeys(delta, arms, crane) {
 		}
 	}
 
+	// Legs
+	if (ri.currentlyPressedKeys['Digit5']) { // 4
+		for (let leg of legs) {
+			leg.animation.extended += 0.05;
+			if (leg.animation.extended > 1.8) {
+				leg.animation.extended = 1.8;
+			}
+		}
+	}
+	if (ri.currentlyPressedKeys['KeyT']) { // R
+		for (let leg of legs) {
+			leg.animation.extended -= 0.05;
+			if (leg.animation.extended < 1) {
+				leg.animation.extended = 1;
+			}
+		}
+	}
+
 	// Steering
-	if (ri.currentlyPressedKeys['ArrowLeft']) {
+	if (ri.currentlyPressedKeys['Digit7']) {
 		// Turn left
 		crane.steeringAngle += 0.02; // Adjust increment as needed
 		if (crane.steeringAngle > crane.maxSteeringAngle) {
 			crane.steeringAngle = crane.maxSteeringAngle;
 		}
 	}
-	if (ri.currentlyPressedKeys['ArrowRight']) {
+	if (ri.currentlyPressedKeys['KeyU']) {
 		// Turn right
 		crane.steeringAngle -= 0.02; // Adjust decrement as needed
 		if (crane.steeringAngle < -crane.maxSteeringAngle) {
@@ -113,14 +135,25 @@ function handleKeyDown(event) {
 function addSceneObjects() {
 	addCoordSystem(ri.scene);
 
+	let material = new THREE.MeshStandardMaterial({side: THREE.DoubleSide, wireframe: false});
+	material.roughness = 0.4;
+
+	//Plan:
+	let geometryPlane = new THREE.PlaneGeometry(200, 200);
+	let meshPlane = new THREE.Mesh(geometryPlane, material);
+	meshPlane.receiveShadow = true;         //Merk!
+	meshPlane.rotation.x = Math.PI / 2;
+	ri.scene.add(meshPlane);
+
 	let crane = createCrane();
 	crane.name = "platform";
+	crane.castShadow = true;       //Merk!
 	crane.animation = {
 		posX: 0,
 		posY: 0,
 		rotationAngleY: 0
 	};
-	crane.position.y = 1;
+	crane.position.y = 3;
 	ri.scene.add(crane);
 
 	animate(0);
@@ -135,8 +168,11 @@ function createCrane() {
 	// Create crane base
 	let craneBase = createBaseMesh(craneBaseDiameter, craneHeight);
 
+	// Remember craneLegs
+	let craneLegs = []
+
 	// Add crane arms
-	let craneArms = addCraneArms(craneBase, craneBaseDiameter, craneHeight);
+	let craneArms = addCraneArms(craneBase, craneBaseDiameter, craneHeight, craneLegs);
 
 	// Add wheels and get references to the wheels to be steered
 	let wheelsToSteer = addWheels(craneBase, backWheelOffset);
@@ -146,6 +182,7 @@ function createCrane() {
 
 	// Store craneArms and wheelsToSteer in craneBase for later reference
 	craneBase.craneArms = craneArms;
+	craneBase.craneLegs = craneLegs;
 	craneBase.wheelsToSteer = wheelsToSteer;
 
 	// Initialize steering properties
@@ -155,7 +192,7 @@ function createCrane() {
 	return craneBase;
 }
 
-function addCraneArms(craneBase, craneBaseDiameter, craneHeight) {
+function addCraneArms(craneBase, craneBaseDiameter, craneHeight, craneLegs) {
 	let angles = [Math.PI / 2, Math.PI / 2, Math.PI + Math.PI / 2, Math.PI + Math.PI / 2];
 	let offsets = [0, 9.5, 9.5, 0];
 
@@ -163,7 +200,7 @@ function addCraneArms(craneBase, craneBaseDiameter, craneHeight) {
 	let craneArms = [];
 
 	for (let i = 1; i <= 4; i++) {
-		let craneArm = createCraneArm(craneBase, craneBaseDiameter, craneHeight, i, angles[i - 1], offsets[i - 1]);
+		let craneArm = createCraneArm(craneBase, craneBaseDiameter, craneHeight, i, angles[i - 1], offsets[i - 1], craneLegs);
 		craneArm.animation = { extended: 0 };
 		craneBase.add(craneArm);
 		craneArms.push(craneArm); // Store the arm for animation
@@ -223,7 +260,7 @@ function addPassengerAndRim(craneBase) {
 }
 
 
-function createCraneArm(base, craneDiameter, craneHeight, armNumber, angle, x = 0) {
+function createCraneArm(base, craneDiameter, craneHeight, armNumber, angle, x = 0, craneLegs) {
 	let armBase = createArmBaseMesh(craneDiameter, craneHeight);
 	armBase.name = "arm" + armNumber;
 
@@ -239,9 +276,11 @@ function createCraneArm(base, craneDiameter, craneHeight, armNumber, angle, x = 
 
 	// Support arm
 	let armFoot = createFootMesh(2);
+	armFoot.animation = { extended: 1 };
 	armFoot.translateX(craneDiameter / 2);
-	armFoot.translateY(-2 / 2);
+	armFoot.translateY(-1.45);
 	armBase.add(armFoot);
+	craneLegs.push(armFoot)
 
 	return armBase;
 }
@@ -255,6 +294,25 @@ function createEngineBase(armNumber, craneHeight) {
 }
 
 function addLights() {
+
+	//TODO: implement lights correctly
+	//** RETNINGSORIENTERT LYS (som gir skygge):
+	let directionalLight = new THREE.DirectionalLight(0x11ff00, 0.3);
+	directionalLight.visible = false;
+	directionalLight.position.set(0, 20, 0);
+	directionalLight.castShadow = true;     //Merk!
+
+	directionalLight.shadow.mapSize.width = 1024;
+	directionalLight.shadow.mapSize.height = 1024;
+	directionalLight.shadow.camera.near = 0;
+	directionalLight.shadow.camera.far = 21;
+	directionalLight.shadow.camera.left = -15;
+	directionalLight.shadow.camera.right = 15;
+	directionalLight.shadow.camera.top = 15;
+	directionalLight.shadow.camera.bottom = -15;
+
+	ri.scene.add(directionalLight);
+
 	let light1 = new THREE.DirectionalLight(0xffffff, 1.0);
 	light1.position.set(2, 1, 4);
 	ri.scene.add(light1);
@@ -277,6 +335,7 @@ function animate(currentTime) {
 	let crane = ri.scene.getObjectByName('platform');
 
 	let craneArms = crane.craneArms;
+	let craneLegs = crane.craneLegs;
 	let wheelsToSteer = crane.wheelsToSteer;
 
 	// Update positions of the crane arms
@@ -287,6 +346,9 @@ function animate(currentTime) {
 			craneArms[i].position.z = craneArms[i].animation.extended;
 		}
 	}
+	for (let i = 0; i < craneLegs.length; i++) {
+		craneLegs[i].scale.y = craneLegs[i].animation.extended;
+	}
 
 	// Apply steering angle to wheels
 	wheelsToSteer.forEach(wheel => {
@@ -294,7 +356,7 @@ function animate(currentTime) {
 	});
 
 	// Check input
-	handleKeys(delta, craneArms, crane);
+	handleKeys(delta, craneArms, craneLegs, crane);
 
 	ri.controls.update();
 
