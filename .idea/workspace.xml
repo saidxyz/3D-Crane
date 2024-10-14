@@ -4,16 +4,8 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="106bf7ef-beac-46e8-b141-04e2b1201e9d" name="Changes" comment="">
+    <list default="true" id="106bf7ef-beac-46e8-b141-04e2b1201e9d" name="Changes" comment="implemented arms on truck">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/_metadata.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/chunk-RSROGMPJ.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/chunk-RSROGMPJ.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/three.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/three.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js.map" beforeDir="false" afterPath="$PROJECT_DIR$/node_modules/.vite/deps/three_examples_jsm_controls_TrackballControls.js.map" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Oblig3/gruppe 3/helper.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/Oblig3/gruppe 3/helper.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Oblig3/gruppe 3/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/Oblig3/gruppe 3/script.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,8 +77,16 @@
       <option name="presentableId" value="Default" />
       <updated>1728840963915</updated>
       <workItem from="1728840965209" duration="12827000" />
-      <workItem from="1728874578945" duration="8751000" />
+      <workItem from="1728874578945" duration="14056000" />
     </task>
+    <task id="LOCAL−00001" summary="implemented arms on truck">
+      <option name="closed" value="true" />
+      <created>1728886448591</created>
+      <option name="number" value="LOCAL−00001" />
+      <option name="presentableId" value="LOCAL−00001" />
+      <updated>1728886448591</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -102,5 +102,9 @@
         </entry>
       </map>
     </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="implemented arms on truck" />
+    <option name="LAST_COMMIT_MESSAGE" value="implemented arms on truck" />
   </component>
 </project>
