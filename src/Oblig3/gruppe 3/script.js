@@ -1,20 +1,20 @@
 import '../../../../threejs24_std/src/style.css';
 
 import * as THREE from "three";
-import {TrackballControls} from "three/examples/jsm/controls/TrackballControls";
-import {addCoordSystem} from "../../../../threejs24_std/static/lib/wfa-coord.js";
+import { TrackballControls } from "three/examples/jsm/controls/TrackballControls";
+import { addCoordSystem } from "../../../../threejs24_std/static/lib/wfa-coord.js";
 import {
 	createArmBaseMesh,
-	createDroneBaseMesh,
+	createBaseMesh,
 	createEngineMesh,
 	createFootMesh,
-	createSphereMesh,
 	createWheelMesh,
-	createPassengerSetMesh
-} from "./droneHelper.js";
+	createPassengerSetMesh,
+	createrimSetMesh
+} from "./helper.js";
 
 const ri = {
-	currentlyPressedKeys: []
+	currentlyPressedKeys: {}
 };
 
 export function main() {
@@ -22,263 +22,274 @@ export function main() {
 	document.body.appendChild(canvas);
 
 	// Renderer:
-	ri.renderer = new THREE.WebGLRenderer({canvas: canvas, antialias: true});
+	ri.renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
 	ri.renderer.setSize(window.innerWidth, window.innerHeight);
 
 	// Scene
 	ri.scene = new THREE.Scene();
-	ri.scene.background = new THREE.Color( 0xdddddd );
+	ri.scene.background = new THREE.Color(0xdddddd);
 
-	// Lys
+	// Lights
 	addLights();
 
-	// Kamera:
+	// Camera:
 	ri.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-	ri.camera.position.x = 7;
-	ri.camera.position.y = 8;
-	ri.camera.position.z = 20;
+	ri.camera.position.set(7, 8, 20);
 
 	// TrackballControls:
 	ri.controls = new TrackballControls(ri.camera, ri.renderer.domElement);
-	ri.controls.addEventListener( 'change', renderScene);
+	ri.controls.addEventListener('change', renderScene);
 
-	//Håndterer endring av vindusstørrelse:
+	// Clock for animation
+	ri.clock = new THREE.Clock();
+
+	// Handle window resize:
 	window.addEventListener('resize', onWindowResize, false);
-	//Input - standard Javascript / WebGL:
+
+	// Input - standard JavaScript / WebGL:
 	document.addEventListener('keyup', handleKeyUp, false);
 	document.addEventListener('keydown', handleKeyDown, false);
 
-	// Sceneobjekter
+	// Scene objects
 	addSceneObjects();
 }
 
-//Sjekker tastaturet:
-function handleKeys(delta, arms) {
-	//Arms:
-	if (ri.currentlyPressedKeys['Digit4']) { //4
-		for( let arm of arms){
-			arm.animation.extended += 0.2
-			console.log(arm.animation.extended)
-			if(arm.animation.extended > 25){
-				arm.animation.extended = 25
+// Handle keyboard input
+function handleKeys(delta, arms, crane) {
+	// Arms:
+	if (ri.currentlyPressedKeys['Digit4']) { // 4
+		for (let arm of arms) {
+			arm.animation.extended += 0.2;
+			if (arm.animation.extended > 5) {
+				arm.animation.extended = 5;
 			}
 		}
 	}
-	if (ri.currentlyPressedKeys['KeyR']) { //R
-		for( let arm of arms){
-			arm.animation.extended -= 0.2
-			if(arm.animation.extended < 10){
-				arm.animation.extended = 10
+	if (ri.currentlyPressedKeys['KeyR']) { // R
+		for (let arm of arms) {
+			arm.animation.extended -= 0.2;
+			if (arm.animation.extended < 0) {
+				arm.animation.extended = 0;
 			}
+		}
+	}
+
+	// Steering
+	if (ri.currentlyPressedKeys['ArrowLeft']) {
+		// Turn left
+		crane.steeringAngle += 0.02; // Adjust increment as needed
+		if (crane.steeringAngle > crane.maxSteeringAngle) {
+			crane.steeringAngle = crane.maxSteeringAngle;
+		}
+	}
+	if (ri.currentlyPressedKeys['ArrowRight']) {
+		// Turn right
+		crane.steeringAngle -= 0.02; // Adjust decrement as needed
+		if (crane.steeringAngle < -crane.maxSteeringAngle) {
+			crane.steeringAngle = -crane.maxSteeringAngle;
+		}
+	}
+
+	// Reset steering when keys are not pressed
+	if (!ri.currentlyPressedKeys['ArrowLeft'] && !ri.currentlyPressedKeys['ArrowRight']) {
+		// Gradually return to straight position
+		if (crane.steeringAngle > 0) {
+			crane.steeringAngle -= 0.01;
+			if (crane.steeringAngle < 0) crane.steeringAngle = 0;
+		} else if (crane.steeringAngle < 0) {
+			crane.steeringAngle += 0.01;
+			if (crane.steeringAngle > 0) crane.steeringAngle = 0;
 		}
 	}
 }
 
 function handleKeyUp(event) {
-	ri.currentlyPressedKeys[event.keyCode] = false;
+	ri.currentlyPressedKeys[event.code] = false;
 }
 
 function handleKeyDown(event) {
-	ri.currentlyPressedKeys[event.keyCode] = true;
+	ri.currentlyPressedKeys[event.code] = true;
 }
 
 function addSceneObjects() {
 	addCoordSystem(ri.scene);
 
-	let drone = createDrone();
-	drone.name = "myDrone";
-	drone.animation = {
+	let crane = createCrane();
+	crane.name = "platform";
+	crane.animation = {
 		posX: 0,
 		posY: 0,
 		rotationAngleY: 0
 	};
-	drone.position.y = 1
-	ri.scene.add(drone);
+	crane.position.y = 1;
+	ri.scene.add(crane);
 
 	animate(0);
 }
 
-function createDrone() {
-	// Dronekroppen:
-	let droneBaseDiameter = 5;
-	let droneHeight = 0.8;
-	// Merk: droneBase er et Mesh-objekt (som igjen arver fra Object3D):
-	let droneBase = createDroneBaseMesh(droneBaseDiameter, droneHeight);
-	//droneBase.position.set(-10, 23, -44);
-	let backWheel = 2;
-	let noSpheres = 2;     //numberOfSpheres
-	let step = (2*Math.PI)/noSpheres;
-	for (let angle=0; angle <2*Math.PI; angle+=step) {
-		let sphereMesh = createSphereMesh(0.4);
+function createCrane() {
+	// Crane body configuration
+	const craneBaseDiameter = 5;
+	const craneHeight = 0.7;
+	const backWheelOffset = 2;
 
+	// Create crane base
+	let craneBase = createBaseMesh(craneBaseDiameter, craneHeight);
 
-		//droneBase.add(sphereMesh);
+	// Add crane arms
+	let craneArms = addCraneArms(craneBase, craneBaseDiameter, craneHeight);
+
+	// Add wheels and get references to the front wheels
+	let frontWheels = addWheels(craneBase, backWheelOffset);
+
+	// Add passenger and rim components
+	addPassengerAndRim(craneBase);
+
+	// Store craneArms and frontWheels in craneBase for later reference
+	craneBase.craneArms = craneArms;
+	craneBase.frontWheels = frontWheels;
+
+	// Initialize steering properties
+	craneBase.steeringAngle = 0;
+	craneBase.maxSteeringAngle = Math.PI / 6; // Maximum steering angle (30 degrees)
+
+	return craneBase;
+}
+
+function addCraneArms(craneBase, craneBaseDiameter, craneHeight) {
+	let angles = [Math.PI / 2, Math.PI / 2, Math.PI + Math.PI / 2, Math.PI + Math.PI / 2];
+	let offsets = [0, 9.5, 9.5, 0];
+
+	// Array to hold references to the crane arms
+	let craneArms = [];
+
+	for (let i = 1; i <= 4; i++) {
+		let craneArm = createCraneArm(craneBase, craneBaseDiameter, craneHeight, i, angles[i - 1], offsets[i - 1]);
+		craneArm.animation = { extended: 0 };
+		craneBase.add(craneArm);
+		craneArms.push(craneArm); // Store the arm for animation
 	}
 
-	let droneArm1 = createDroneArm(droneBaseDiameter, droneHeight, 1,  Math.PI/2);
-	droneBase.add(droneArm1);
-
-	let droneArm2 = createDroneArm2(droneBaseDiameter, droneHeight, 2, Math.PI/2);
-	droneBase.add(droneArm2);
-
-	let droneArm3 = createDroneArm2(droneBaseDiameter, droneHeight, 3, Math.PI + Math.PI/2);
-	droneBase.add(droneArm3);
-
-	let droneArm4 = createDroneArm(droneBaseDiameter, droneHeight, 4, Math.PI + Math.PI/2);
-	droneBase.add(droneArm4);
-
-	let wheelFront1 = createWheelMesh();
-	wheelFront1.translateX(-(backWheel+6))
-	wheelFront1.translateY(-2)
-	wheelFront1.translateZ(2)
-	droneBase.add(wheelFront1);
-
-	let wheelFront2 = createWheelMesh();
-	wheelFront2.translateX(-(backWheel+6))
-	wheelFront2.translateY(-2)
-	wheelFront2.translateZ(-2)
-	droneBase.add(wheelFront2);
-
-	let wheelFront3 = createWheelMesh();
-	wheelFront3.translateX(-(backWheel+3))
-	wheelFront3.translateY(-2)
-	wheelFront3.translateZ(2)
-	droneBase.add(wheelFront3);
-
-	let wheelFront4 = createWheelMesh();
-	wheelFront4.translateX(-(backWheel+3))
-	wheelFront4.translateY(-2)
-	wheelFront4.translateZ(-2)
-	droneBase.add(wheelFront4);
-
-	let wheelBack1 = createWheelMesh();
-	wheelBack1.translateX((backWheel+6))
-	wheelBack1.translateY(-2)
-	wheelBack1.translateZ(2)
-	droneBase.add(wheelBack1);
-
-	let wheelBack2 = createWheelMesh();
-	wheelBack2.translateX((backWheel+6))
-	wheelBack2.translateY(-2)
-	wheelBack2.translateZ(-2)
-	droneBase.add(wheelBack2);
-
-	let wheelBack3 = createWheelMesh();
-	wheelBack3.translateX((backWheel+3))
-	wheelBack3.translateY(-2)
-	wheelBack3.translateZ(2)
-	droneBase.add(wheelBack3);
-
-	let wheelBack4 = createWheelMesh();
-	wheelBack4.translateX((backWheel+3))
-	wheelBack4.translateY(-2)
-	wheelBack4.translateZ(-2)
-	droneBase.add(wheelBack4);
-
-	let wheelBack5 = createWheelMesh();
-	wheelBack5.translateX(backWheel)
-	wheelBack5.translateY(-2)
-	wheelBack5.translateZ(2)
-	droneBase.add(wheelBack5);
-
-	let wheelBack6 = createWheelMesh();
-	wheelBack6.translateX(backWheel)
-	wheelBack6.translateY(-2)
-	wheelBack6.translateZ(-2)
-	droneBase.add(wheelBack6);
-
-	//let passenger = createPassengerSetMesh();
-	//droneBase.add(passenger);
-
-
-	return droneBase;
+	// Return the array of crane arms for animation
+	return craneArms;
 }
 
+function addWheels(craneBase, backWheel) {
+	const wheelPositions = [
+		{ x: -(backWheel + 6), y: -2, z: 2 },
+		{ x: -(backWheel + 6), y: -2, z: -2 },
+		{ x: -(backWheel + 3), y: -2, z: 2 },
+		{ x: -(backWheel + 3), y: -2, z: -2 },
+		{ x: (backWheel + 6), y: -2, z: 2 },
+		{ x: (backWheel + 6), y: -2, z: -2 },
+		{ x: (backWheel + 3), y: -2, z: 2 },
+		{ x: (backWheel + 3), y: -2, z: -2 },
+		{ x: backWheel, y: -2, z: 2 },
+		{ x: backWheel, y: -2, z: -2 }
+	];
 
-function createDroneArm(droneDiameter, droneHeight, armNumber, angle) {
-	// Merk: armBase er et Mesh-objekt.
+	let frontWheels = []; // Array to hold references to the front wheels
 
-	let armBase = createArmBaseMesh(droneDiameter, droneHeight);
+	wheelPositions.forEach((position, index) => {
+		let wheel = createWheelMesh();
+		wheel.position.set(position.x, position.y, position.z);
+		craneBase.add(wheel);
+
+		// If this is one of the front wheels (first 4), store a reference to it
+		if (index < 4) {
+			frontWheels.push(wheel);
+		}
+	});
+
+	// Return the array of front wheels
+	return frontWheels;
+}
+
+function addPassengerAndRim(craneBase) {
+	let passenger = createPassengerSetMesh();
+	passenger.position.set(-11, -0.5, 2);
+	craneBase.add(passenger);
+
+	let rim = createrimSetMesh();
+	rim.position.set(-11.1, -0.5, 0);
+	craneBase.add(rim);
+}
+
+function createCraneArm(base, craneDiameter, craneHeight, armNumber, angle, x = 0) {
+	let armBase = createArmBaseMesh(craneDiameter, craneHeight);
+	armBase.name = "arm" + armNumber;
+
+	armBase.translateX(x);
 	armBase.rotateY(angle);
-	armBase.translateX(droneDiameter);
+	armBase.translateX(craneDiameter);
 
-	let engineBase = createEngineBase(armNumber, droneHeight);
-	engineBase.translateX(droneDiameter/2);
+	base.add(armBase);
+
+	let engineBase = createEngineBase(armNumber, craneHeight);
+	engineBase.translateX(craneDiameter / 2);
 	armBase.add(engineBase);
 
-	//støtte arm
+	// Support arm
 	let armFoot = createFootMesh(2);
-	armFoot.translateX(droneDiameter/2);
-	armFoot.translateY(-2/2)
+	armFoot.translateX(craneDiameter / 2);
+	armFoot.translateY(-2 / 2);
 	armBase.add(armFoot);
 
 	return armBase;
 }
 
-function createDroneArm2(droneDiameter, droneHeight, armNumber, angle) {
-	// Merk: armBase er et Mesh-objekt.
-	let armBase = createArmBaseMesh(droneDiameter, droneHeight);
-	armBase.translateX(9.5);
-	armBase.rotateY(angle);
-	armBase.translateX(droneDiameter);
-
-	let engineBase = createEngineBase(armNumber, droneHeight);
-	engineBase.translateX(droneDiameter/2);
-	armBase.add(engineBase);
-
-	//støtte arm
-	let armFoot = createFootMesh(2);
-	armFoot.translateX(droneDiameter/2);
-	armFoot.translateY(-2/2)
-	armBase.add(armFoot);
-
-	return armBase;
-}
-
-function createEngineBase(armNumber, droneHeight) {
+function createEngineBase(armNumber, craneHeight) {
 	let group = new THREE.Group();
-	let height = droneHeight*1.3;
+	let height = craneHeight * 1.3;
 	let motor = createEngineMesh(height);
 	group.add(motor);
 	return group;
 }
 
-
 function addLights() {
-	let light1 = new THREE.DirectionalLight(0xffffff, 1.0); //farge, intensitet (1=default)
+	let light1 = new THREE.DirectionalLight(0xffffff, 1.0);
 	light1.position.set(2, 1, 4);
 	ri.scene.add(light1);
 
-	let light2 = new THREE.DirectionalLight(0xffffff, 1.0); //farge, intensitet (1=default)
+	let light2 = new THREE.DirectionalLight(0xffffff, 1.0);
 	light2.position.set(-2, -1, -4);
 	ri.scene.add(light2);
 
-	let light3 = new THREE.DirectionalLight(0xffffff, 1.0); //farge, intensitet (1=default)
+	let light3 = new THREE.DirectionalLight(0xffffff, 1.0);
 	light3.position.set(100, 300, 300);
 	light3.target.position.set(0, 0, 0);
 	ri.scene.add(light3);
 }
 
 function animate(currentTime) {
-	window.requestAnimationFrame((currentTime) => {
-		animate(currentTime);
-	});
-	let meshCraneTruck = ri.scene.getObjectByName('platform');
-	//Truck Arms
-	//let meshArms = []
-	//for(var i = 1; i < 3; i++){
-	//	meshArms[i-1] = meshCraneTruck.getObjectByName('arm'+i, true);
-	//	meshArms[i-1].position.z = meshArms[i-1].animation.extended;
-	//}
-	//for(var i = 3; i < 5; i++){
-	//	meshArms[i-1] = meshCraneTruck.getObjectByName('arm'+i, true);
-	//	meshArms[i-1].position.z = -meshArms[i-1].animation.extended;
-	//}
+	window.requestAnimationFrame(animate);
 
-	//Sjekker input:
-	//handleKeys(delta, meshArms);
+	const delta = ri.clock.getDelta();
+
+	let crane = ri.scene.getObjectByName('platform');
+
+	let craneArms = crane.craneArms;
+	let frontWheels = crane.frontWheels;
+
+	// Update positions of the crane arms
+	for (let i = 0; i < craneArms.length; i++) {
+		if (i < 2) {
+			craneArms[i].position.z = -craneArms[i].animation.extended;
+		} else {
+			craneArms[i].position.z = craneArms[i].animation.extended;
+		}
+	}
+
+	// Apply steering angle to front wheels
+	frontWheels.forEach(wheel => {
+		wheel.rotation.y = crane.steeringAngle;
+	});
+
+	// Check input
+	handleKeys(delta, craneArms, crane);
 
 	ri.controls.update();
+
 	renderScene();
 }
 
@@ -286,9 +297,7 @@ function renderScene() {
 	ri.renderer.render(ri.scene, ri.camera);
 }
 
-
 function onWindowResize() {
-
 	ri.camera.aspect = window.innerWidth / window.innerHeight;
 	ri.camera.updateProjectionMatrix();
 
