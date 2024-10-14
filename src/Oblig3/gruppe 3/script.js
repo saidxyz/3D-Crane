@@ -166,18 +166,21 @@ function animate(currentTime) {
 
     //Truck platform (root objektet)
     let meshTorso = ri.scene.getObjectByName("torso");
-    meshTorso.scale.set(18,0.2,14);
+    meshTorso.scale.set(18,0.3,14);
 
     //HØYRE ARM (over&under):
-    let meshRightUpperArm = meshTorso.getObjectByName('rightUpperArm', true);
-    let meshRightLowerArm = meshTorso.getObjectByName('rightLowerArm', true);
+    let meshRightUpperArm = ri.scene.getObjectByName('rightUpperArm', true);
+    meshRightUpperArm.scale.set(10,10,10);
+
+    let meshRightLowerArm = ri.scene.getObjectByName('rightLowerArm', true);
+    meshRightUpperArm.scale.set(10,10,1);
     //Merk: finner opprinnelig størrelser.
     let rightUpperArmWidth = meshRightUpperArm.geometry.parameters.width;
     let rightLowerArmWidth = meshRightLowerArm.geometry.parameters.width;
 
     meshRightUpperArm.translateX(-rightUpperArmWidth/2);
     // Roter (her om Z-aksen):
-    meshRightUpperArm.rotation.z = meshRightUpperArm.animation.angle;
+    meshRightUpperArm.position.z = (meshRightUpperArm.animation.angle);
     // Flytt meshet tilbake (langs X):
     meshRightUpperArm.translateX(rightUpperArmWidth/2);
 
@@ -194,7 +197,7 @@ function animate(currentTime) {
     let leftLowerArmWidth = meshLeftLowerArm.geometry.parameters.width;
 
     meshLeftUpperArm.translateX(leftUpperArmWidth / 2);
-    meshLeftUpperArm.rotation.z = meshLeftUpperArm.animation.angle;
+    meshLeftUpperArm.position.z = meshLeftUpperArm.animation.angle;
     meshLeftUpperArm.translateX(-leftUpperArmWidth / 2);
 
     meshLeftLowerArm.translateX(leftLowerArmWidth / 2);
@@ -270,12 +273,18 @@ function handleKeys(delta, arm, meshRightUpperArm, meshRightLowerArm, meshLeftUp
     }
 
     if (ri.currentlyPressedKeys['KeyS']) {	//S
-        meshRightUpperArm.animation.angle = meshRightUpperArm.animation.angle + (rotationSpeed * delta);
-        meshRightUpperArm.animation.angle %= (Math.PI * 2);
+        meshRightUpperArm.animation.angle += 0.05;
+        if (meshRightUpperArm.animation.angle >= 2) {
+            meshRightUpperArm.animation.angle = 2;
+        }
     }
     if (ri.currentlyPressedKeys['KeyW']) {	//W
-        meshRightUpperArm.animation.angle = meshRightUpperArm.animation.angle - (rotationSpeed * delta);
-        meshRightUpperArm.animation.angle %= (Math.PI * 2);
+        meshRightUpperArm.animation.angle -= 0.05;
+        console.log(meshRightUpperArm.animation.angle);
+        if (meshRightUpperArm.animation.angle <= -2) {
+            meshRightUpperArm.animation.angle = -2;
+            console.log(meshRightUpperArm.animation.angle);
+        }
     }
     // LEFT ARM
     if (ri.currentlyPressedKeys['KeyH']) { //H
