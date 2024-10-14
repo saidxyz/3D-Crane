@@ -10,8 +10,7 @@ import {
 	createFootMesh,
 	createWheelMesh,
 	createPassengerSetMesh,
-	createrimSetMesh
-} from "./helper.js";
+	createRimSetMesh} from "./helper.js";
 
 const ri = {
 	currentlyPressedKeys: {}
@@ -213,14 +212,16 @@ function addWheels(craneBase, backWheel) {
 
 
 function addPassengerAndRim(craneBase) {
-	let passenger = createPassengerSetMesh();
-	passenger.position.set(-11, -0.5, 2);
+	const passenger = createPassengerSetMesh();
+	passenger.position.set(-11, 1, -0);
 	craneBase.add(passenger);
 
-	let rim = createrimSetMesh();
-	rim.position.set(-11.1, -0.5, 0);
+	const rim = createRimSetMesh(); // Corrected function name for consistency
+	rim.position.set(-13, 0, 0);
+	rim.rotation.y = Math.PI / 2;
 	craneBase.add(rim);
 }
+
 
 function createCraneArm(base, craneDiameter, craneHeight, armNumber, angle, x = 0) {
 	let armBase = createArmBaseMesh(craneDiameter, craneHeight);

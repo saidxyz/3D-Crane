@@ -12,7 +12,7 @@ export function createBaseMesh(diameter=6, height=1) {
 
 export function createArmBaseMesh(length, height) {
 	let geometry = new THREE.BoxGeometry(length,height,1);
-	let material = new THREE.MeshPhongMaterial({color:0xF00D0F, side: THREE.DoubleSide});
+	let material = new THREE.MeshPhongMaterial({color:0x333333, side: THREE.DoubleSide});
 	let mesh = new THREE.Mesh( geometry, material);
 	mesh.animation = { extended: 0 };
 	return mesh;
@@ -50,26 +50,18 @@ export function createWheelMesh() {
 	return tireMesh;
 }
 
+
 export function createPassengerSetMesh() {
-	let geometry = new THREE.BoxGeometry(2, 2, 4);  // Wider and longer
-	let material = new THREE.MeshBasicMaterial({ color: 0xAAAAAA });
-	let mesh = new THREE.Mesh(geometry, material);
-	return mesh;
-}
-
-export function createrimSetMesh() {
-	let geometry = new THREE.BoxGeometry( 2.25, 1, 5 );
-	let material = new THREE.MeshBasicMaterial( {color: 0xF00D0F} );
-	let mesh  = new THREE.Mesh( geometry, material );
+	const geometry = new THREE.BoxGeometry(3.5, 3, 5.1); // Wider and longer
+	const material = new THREE.MeshBasicMaterial({ color: 0xAAAAAA });
+	const mesh = new THREE.Mesh(geometry, material);
 	return mesh;
 }
 
 
-
-export function createHookMesh() {
-	let geometry = new THREE.BoxGeometry( 2.25, 1, 5 );
-	let material = new THREE.MeshBasicMaterial( {color: 0xF00D0F} );
-	let mesh  = new THREE.Mesh( geometry, material );
+export function createRimSetMesh() {
+	const geometry = new THREE.BoxGeometry(5, 1, 0.5, 32); // Cylinder shape for the rim
+	const material = new THREE.MeshBasicMaterial({ color: 0xF00D0F });
+	const mesh = new THREE.Mesh(geometry, material);
 	return mesh;
 }
-
