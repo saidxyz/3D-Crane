@@ -96,7 +96,7 @@ export function createCrane(textureObject) {
 	groupLowerArm.add(groupUpperArm);
 
 	// Snor ned
-	let groupHookWire = createArmWithUpperJoint(4, 100, 50, material1, Math.PI/2, 50,1,1, true);
+	let groupHookWire = createArmWithUpperJoint(4, 100, 20, material1, Math.PI/2, 50,1,1, true);
 	groupUpperArm.add(groupHookWire);
 
 	return baseGroup;
@@ -144,7 +144,7 @@ function createArmWithUpperJoint(
 		const material = new THREE.MeshBasicMaterial( { color: 0x000000 } );
 		const meshHook = new THREE.Mesh( geometry, material );
 		meshHook.position.x = 0;
-		meshHook.position.y = armGeometry.parameters.height*2;
+		meshHook.position.y = armGeometry.parameters.height + 4;
 		meshHook.position.z = 0;
 		meshHook.castShadow = true;
 		meshHook.name = 'hook';

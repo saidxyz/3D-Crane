@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="106bf7ef-beac-46e8-b141-04e2b1201e9d" name="Changes" comment="fixed crane leg animations">
+    <list default="true" id="106bf7ef-beac-46e8-b141-04e2b1201e9d" name="Changes" comment="added all the hotkeys. Some minor and major bugs introduced sadly">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/Oblig3/gruppe 3/helper.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/Oblig3/gruppe 3/helper.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Oblig3/gruppe 3/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/Oblig3/gruppe 3/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Oblig3/gruppe 3/script.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/Oblig3/gruppe 3/script.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -85,7 +83,7 @@
       <updated>1728840963915</updated>
       <workItem from="1728840965209" duration="12827000" />
       <workItem from="1728952335577" duration="123000" />
-      <workItem from="1728952719378" duration="7866000" />
+      <workItem from="1728952719378" duration="10212000" />
     </task>
     <task id="LOCAL−00001" summary="fixed crane leg animations">
       <option name="closed" value="true" />
@@ -101,7 +99,14 @@
       <option name="presentableId" value="LOCAL−00002" />
       <updated>1728944163815</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL−00003" summary="added all the hotkeys. Some minor and major bugs introduced sadly">
+      <option name="closed" value="true" />
+      <created>1728960982595</created>
+      <option name="number" value="LOCAL−00003" />
+      <option name="presentableId" value="LOCAL−00003" />
+      <updated>1728960982595</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -120,6 +125,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="fixed crane leg animations" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixed crane leg animations" />
+    <MESSAGE value="added all the hotkeys. Some minor and major bugs introduced sadly" />
+    <option name="LAST_COMMIT_MESSAGE" value="added all the hotkeys. Some minor and major bugs introduced sadly" />
   </component>
 </project>
