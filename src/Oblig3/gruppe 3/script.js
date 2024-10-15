@@ -10,7 +10,9 @@ import {
 	createFootMesh,
 	createWheelMesh,
 	createPassengerSetMesh,
-	createRimSetMesh} from "./helper.js";
+	createRimSetMesh,
+	createCrane
+} from "./helper.js";
 
 const ri = {
 	currentlyPressedKeys: {}
@@ -58,10 +60,46 @@ export function main() {
 }
 
 // Handle keyboard input
-function handleKeys(delta, arms, legs, crane) {
+function handleKeys(delta, crane) {
+	let rotationSpeed = (Math.PI); // Bestemmer rotasjonshastighet.
+
+	//Roter underarmen om X-AKSEN:
+	if (ri.currentlyPressedKeys['Digit1']) {	//1
+		crane.crane.extended += 0.05
+		if (crane.crane.extended > 2) {
+			crane.crane.extended = 2;
+		}
+	}
+	if (ri.currentlyPressedKeys['KeyQ']) {	//Q
+		crane.crane.extended -= 0.05
+		if (crane.crane.extended < 1) {
+			crane.crane.extended = 1;
+		}
+	}
+
+	//Roter underarmen om X-AKSEN:
+	if (ri.currentlyPressedKeys['Digit2']) {	//2
+		crane.crane.joint1XRot = crane.crane.joint1XRot + (rotationSpeed * delta);
+		crane.crane.joint1XRot %= (Math.PI * 2); // "Rull rundt" dersom arm.joint1XRot >= 360 grader.
+	}
+	if (ri.currentlyPressedKeys['KeyW']) {	//W
+		crane.crane.joint1XRot = crane.crane.joint1XRot - (rotationSpeed * delta);
+		crane.crane.joint1XRot %= (Math.PI * 2); // "Rull rundt" dersom arm.joint1XRot >= 360 grader.
+	}
+
+	//Roter foten om Y-AKSEN:
+	if (ri.currentlyPressedKeys['Digit3']) { //3
+		crane.crane.armYRot = crane.crane.armYRot + (rotationSpeed * delta);
+		crane.crane.armYRot %= (Math.PI * 2); // "Rull rundt" dersom arm.armYRot >= 360 grader.
+	}
+	if (ri.currentlyPressedKeys['KeyE']) {	//E
+		crane.crane.armYRot = crane.crane.armYRot - (rotationSpeed * delta);
+		crane.crane.armYRot %= (Math.PI * 2); // "Rull rundt" dersom arm.armYRot >= 360 grader.
+	}
+
 	// Arms:
 	if (ri.currentlyPressedKeys['Digit4']) { // 4
-		for (let arm of arms) {
+		for (let arm of crane.craneArms) {
 			arm.animation.extended += 0.2;
 			if (arm.animation.extended > 5) {
 				arm.animation.extended = 5;
@@ -69,7 +107,7 @@ function handleKeys(delta, arms, legs, crane) {
 		}
 	}
 	if (ri.currentlyPressedKeys['KeyR']) { // R
-		for (let arm of arms) {
+		for (let arm of crane.craneArms) {
 			arm.animation.extended -= 0.2;
 			if (arm.animation.extended < 0) {
 				arm.animation.extended = 0;
@@ -78,20 +116,34 @@ function handleKeys(delta, arms, legs, crane) {
 	}
 
 	// Legs
-	if (ri.currentlyPressedKeys['Digit5']) { // 4
-		for (let leg of legs) {
+	if (ri.currentlyPressedKeys['Digit5']) { // 5
+		for (let leg of crane.craneLegs) {
 			leg.animation.extended += 0.05;
 			if (leg.animation.extended > 1.8) {
 				leg.animation.extended = 1.8;
 			}
 		}
 	}
-	if (ri.currentlyPressedKeys['KeyT']) { // R
-		for (let leg of legs) {
+	if (ri.currentlyPressedKeys['KeyT']) { // T
+		for (let leg of crane.craneLegs) {
 			leg.animation.extended -= 0.05;
 			if (leg.animation.extended < 1) {
 				leg.animation.extended = 1;
 			}
+		}
+	}
+
+	// Legs
+	if (ri.currentlyPressedKeys['Digit6']) { // 6
+		crane.crane.wireExtended += 0.05;
+		if (crane.crane.wireExtended > 1.8) {
+			crane.crane.wireExtended = 1.8;
+		}
+	}
+	if (ri.currentlyPressedKeys['KeyY']) { // Y
+		crane.crane.wireExtended -= 0.05;
+		if (crane.crane.wireExtended < 1) {
+			crane.crane.wireExtended = 1;
 		}
 	}
 
@@ -135,31 +187,47 @@ function handleKeyDown(event) {
 function addSceneObjects() {
 	addCoordSystem(ri.scene);
 
-	let material = new THREE.MeshStandardMaterial({side: THREE.DoubleSide, wireframe: false});
-	material.roughness = 0.4;
+	// Laster først nødvendige teksturer:
+	const loader = new THREE.TextureLoader();
+	loader.load(
+		'../../../assets/textures/metal1.jpg',
+		(textureObject)=> {
+			//Fortsetter her når nedlastinger er ferdig!
 
-	//Plan:
-	let geometryPlane = new THREE.PlaneGeometry(200, 200);
-	let meshPlane = new THREE.Mesh(geometryPlane, material);
-	meshPlane.receiveShadow = true;         //Merk!
-	meshPlane.rotation.x = Math.PI / 2;
-	ri.scene.add(meshPlane);
+			let material = new THREE.MeshStandardMaterial({side: THREE.DoubleSide, wireframe: false});
+			material.roughness = 0.4;
 
-	let crane = createCrane();
-	crane.name = "platform";
-	crane.castShadow = true;       //Merk!
-	crane.animation = {
-		posX: 0,
-		posY: 0,
-		rotationAngleY: 0
-	};
-	crane.position.y = 3;
-	ri.scene.add(crane);
+			//Plan:
+			let geometryPlane = new THREE.PlaneGeometry(200, 200);
+			let meshPlane = new THREE.Mesh(geometryPlane, material);
+			meshPlane.receiveShadow = true;         //Merk!
+			meshPlane.rotation.x = Math.PI / 2;
+			ri.scene.add(meshPlane);
 
-	animate(0);
+			let crane = createCraneTruck(textureObject);
+			crane.name = "platform";
+			crane.castShadow = true;       //Merk!
+			crane.animation = {
+				posX: 0,
+				posY: 0,
+				rotationAngleY: 0
+			};
+			crane.position.y = 3;
+			ri.scene.add(crane);
+
+			// Start animasjonsløkka:
+			animate(0);
+		},
+		undefined,
+		(error)=> {
+			console.log(error)
+		}
+	);
+
+	// animate(0);
 }
 
-function createCrane() {
+function createCraneTruck(textureObject) {
 	// Crane body configuration
 	const craneBaseDiameter = 5;
 	const craneHeight = 0.7;
@@ -177,11 +245,51 @@ function createCrane() {
 	// Add wheels and get references to the wheels to be steered
 	let wheelsToSteer = addWheels(craneBase, backWheelOffset);
 
+	// Add crane to cranetruck
+	let crane = createCrane(textureObject);
+	crane.scale.x = 0.05
+	crane.scale.y = 0.05
+	crane.scale.z = 0.05
+	crane.position.x = 0;
+	crane.position.z = 0;
+	crane.position.y = 0;
+	crane.name = "crane";
+	crane.armYRot = 0.0;
+	crane.joint1XRot = Math.PI/4;
+	crane.extended = 1;
+	crane.wireExtended = 1;
+	craneBase.add(crane);
+
+	// Wire / Line:
+	let groupUpperArm = crane.getObjectByName('armAndJointGroup3', true);
+	let groupLowerArm = crane.getObjectByName('armAndJointGroup2', true); //***
+	let groupOddArm = crane.getObjectByName('armAndJointGroup1', true);
+	// Finner start- og endepunktmesh:
+	const lineMeshStartPosition = groupOddArm.getObjectByName('joint');
+	const lineMeshEndPosition = groupUpperArm.getObjectByName('joint');
+	// Definerer Line-meshet (beståemde av to punkter):
+	const lineMaterial = new THREE.LineBasicMaterial( { color: 0x555555 } );
+	const points = [];
+	const startPoint = new THREE.Vector3();
+	const endPoint = new THREE.Vector3();
+	// NB! Bruker world-position:
+	lineMeshStartPosition.getWorldPosition(startPoint);
+	lineMeshEndPosition.getWorldPosition(endPoint);
+	points.push(startPoint);
+	points.push(endPoint);
+	const lineGeometry = new THREE.BufferGeometry().setFromPoints( points );
+	const wireMesh = new THREE.Line( lineGeometry, lineMaterial );
+	wireMesh.name = "wireMesh";
+	// NB! Linemeshet legges til scene-objektet.
+	ri.scene.add(wireMesh);
+
 	// Add passenger and rim components
 	addPassengerAndRim(craneBase);
 
 	// Store craneArms and wheelsToSteer in craneBase for later reference
 	craneBase.craneArms = craneArms;
+	craneBase.crane = crane;
+	craneBase.wire = crane.getObjectByName('hook');
 	craneBase.craneLegs = craneLegs;
 	craneBase.wheelsToSteer = wheelsToSteer;
 
@@ -355,8 +463,47 @@ function animate(currentTime) {
 		wheel.rotation.y = wheel.initialRotationY + crane.steeringAngle;
 	});
 
+	let arm = crane.crane;
+	let groupOddArm = arm.getObjectByName('armAndJointGroup1', true);
+	let groupLowerArm = arm.getObjectByName('armAndJointGroup2', true);  //true = recursive...
+	let groupUpperArm = arm.getObjectByName('armAndJointGroup3', true);
+	let groupHookWire = arm.getObjectByName('armAndJointGroup4', true);
+
+	// Roterer hele armen om Y-AKSEN:
+	arm.rotation.y = arm.armYRot;
+	// Roterer kranarmen om x-aksen:
+	groupLowerArm.rotation.x = arm.joint1XRot;
+	// Utvider/trekker sammen krana:
+	groupUpperArm.scale.y = arm.extended;
+	// strekker ut/trekker inn vaier
+	groupHookWire.rotation.x = Math.PI - arm.joint1XRot;
+	groupHookWire.scale.y = arm.wireExtended;
+
+	// Henter start- og endepunkt-mesh for å endre Line-geometrien:
+	const lineMeshStartPosition = groupOddArm.getObjectByName('joint');
+	const lineMeshEndPosition = groupUpperArm.getObjectByName('joint');
+	// Henter Line-meshet:
+	let wireLineMesh = ri.scene.getObjectByName('wireMesh', true);
+	// Henter world-position for start og endepunkt til vaieren:
+	const lineVertexPositions = wireLineMesh.geometry.attributes.position.array;
+
+	const lineStartPos = new THREE.Vector3();
+	lineMeshStartPosition.getWorldPosition(lineStartPos);
+	lineVertexPositions[0] = lineStartPos.x;
+	lineVertexPositions[1] = lineStartPos.y;
+	lineVertexPositions[2] = lineStartPos.z;
+
+	const lineEndPos = new THREE.Vector3();
+	lineMeshEndPosition.getWorldPosition(lineEndPos);
+	lineVertexPositions[3] = lineEndPos.x;
+	lineVertexPositions[4] = lineEndPos.y;
+	lineVertexPositions[5] = lineEndPos.z;
+	wireLineMesh.geometry.attributes.position.needsUpdate = true;
+	wireLineMesh.geometry.computeBoundingBox();
+	wireLineMesh.geometry.computeBoundingSphere();
+
 	// Check input
-	handleKeys(delta, craneArms, craneLegs, crane);
+	handleKeys(delta, crane);
 
 	ri.controls.update();
 
