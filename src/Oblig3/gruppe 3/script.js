@@ -188,10 +188,19 @@ function addSceneObjects() {
 	addCoordSystem(ri.scene);
 
 	// Laster først nødvendige teksturer:
-	const loader = new THREE.TextureLoader();
-	loader.load(
-		'../../../assets/textures/metal1.jpg',
-		(textureObject)=> {
+	const cubeTextureLoader = new THREE.CubeTextureLoader();
+	cubeTextureLoader
+		.setPath('../../../assets/cubemaps/GardenNook/')
+		.load(
+		[
+			'../../../assets/cubemaps/GardenNook/px.png',   //positiv x (høyre)
+			'../../../assets/cubemaps/GardenNook/nx.png',   //negativ x (venstre)
+			'../../../assets/cubemaps/GardenNook/py.png',   //positiv y (opp)
+			'../../../assets/cubemaps/GardenNook/ny.png',   //negativ y (ned)
+			'../../../assets/cubemaps/GardenNook/pz.png',   //positiv z (ut)
+			'../../../assets/cubemaps/GardenNook/nz.png',   //negativ z (inn)
+		],
+		(environmentMapTexture)=> {
 			//Fortsetter her når nedlastinger er ferdig!
 
 			let material = new THREE.MeshStandardMaterial({side: THREE.DoubleSide, wireframe: false});
@@ -204,7 +213,7 @@ function addSceneObjects() {
 			meshPlane.rotation.x = Math.PI / 2;
 			ri.scene.add(meshPlane);
 
-			let crane = createCraneTruck(textureObject);
+			let crane = createCraneTruck(environmentMapTexture);
 			crane.name = "platform";
 			crane.castShadow = true;       //Merk!
 			crane.animation = {
@@ -227,7 +236,7 @@ function addSceneObjects() {
 	// animate(0);
 }
 
-function createCraneTruck(textureObject) {
+function createCraneTruck(environmentMapTexture) {
 	// Crane body configuration
 	const craneBaseDiameter = 5;
 	const craneHeight = 0.7;
@@ -246,11 +255,11 @@ function createCraneTruck(textureObject) {
 	let wheelsToSteer = addWheels(craneBase, backWheelOffset);
 
 	// Add crane to cranetruck
-	let crane = createCrane(textureObject);
+	let crane = createCrane(environmentMapTexture);
 	crane.scale.x = 0.05
 	crane.scale.y = 0.05
 	crane.scale.z = 0.05
-	crane.position.x = 0;
+	crane.position.x = 5;
 	crane.position.z = 0;
 	crane.position.y = 0;
 	crane.name = "crane";
@@ -284,7 +293,7 @@ function createCraneTruck(textureObject) {
 	ri.scene.add(wireMesh);
 
 	// Add passenger and rim components
-	addPassengerAndRim(craneBase);
+	addPassengerAndRim(craneBase, environmentMapTexture);
 
 	// Store craneArms and wheelsToSteer in craneBase for later reference
 	craneBase.craneArms = craneArms;
@@ -356,8 +365,8 @@ function addWheels(craneBase, backWheel) {
 }
 
 
-function addPassengerAndRim(craneBase) {
-	const passenger = createPassengerSetMesh();
+function addPassengerAndRim(craneBase, environmentMapTexture) {
+	const passenger = createPassengerSetMesh(environmentMapTexture);
 	passenger.position.set(-11, 1, -0);
 	craneBase.add(passenger);
 
@@ -402,14 +411,23 @@ function createEngineBase(armNumber, craneHeight) {
 }
 
 function addLights() {
-
+	let showHelpers = false
 	//TODO: implement lights correctly!
 	//** RETNINGSORIENTERT LYS (som gir skygge):
 	let directionalLight = new THREE.DirectionalLight(0x11ff00, 0.3);
-	directionalLight.visible = false;
+	directionalLight.visible = true;
 	directionalLight.position.set(0, 20, 0);
 	directionalLight.castShadow = true;     //Merk!
+	// Viser lyskilden:
+	let directionalLightHelper = new THREE.DirectionalLightHelper(directionalLight)
+	directionalLightHelper.visible = false;
+	ri.scene.add(directionalLightHelper);
+	// Viser lyskildekamera (hva lyskilden "ser")
+	const directionalLightCamera = new THREE.CameraHelper(directionalLight.shadow.camera);
+	directionalLightCamera.visible = false;
+	ri.scene.add(directionalLightCamera);
 
+	// For å gi hele kranbilen skygge
 	directionalLight.shadow.mapSize.width = 1024;
 	directionalLight.shadow.mapSize.height = 1024;
 	directionalLight.shadow.camera.near = 0;
@@ -422,8 +440,15 @@ function addLights() {
 	ri.scene.add(directionalLight);
 
 	let light1 = new THREE.DirectionalLight(0xffffff, 1.0);
-	light1.position.set(2, 1, 4);
+	light1.position.set(40, 10, -10);
+	light1.castShadow = true;     //Merk!
 	ri.scene.add(light1);
+	let light1Helper = new THREE.DirectionalLightHelper(light1)
+	light1Helper.visible = false;
+	ri.scene.add(light1Helper);
+	let light1Camera = new THREE.CameraHelper(light1.shadow.camera)
+	light1Camera.visible = false;
+	ri.scene.add(light1Camera);
 
 	let light2 = new THREE.DirectionalLight(0xffffff, 1.0);
 	light2.position.set(-2, -1, -4);
@@ -433,6 +458,57 @@ function addLights() {
 	light3.position.set(100, 300, 300);
 	light3.target.position.set(0, 0, 0);
 	ri.scene.add(light3);
+
+	//** SPOTLIGHT (penumbra = skarpe kanter dersom 0, mer diffus ved økende verdi):
+	const spotLight1 = new THREE.SpotLight(0xffffff, 0.5, 500, Math.PI*0.3, 0, 0);
+	spotLight1.visible = true;
+	spotLight1.castShadow = true;
+	spotLight1.shadow.camera.near = 10;
+	spotLight1.shadow.camera.far = 30;
+	spotLight1.position.set(-13, 3.5, 2);
+	spotLight1.target.position.set(-100,0,0)
+	ri.scene.add(spotLight1);
+	// Viser lyskilden:
+	const spotLightHelper1 = new THREE.SpotLightHelper( spotLight1 );
+	spotLightHelper1.visible = false;
+	ri.scene.add( spotLightHelper1 );
+	// Viser lyskildekamera (hva lyskilden "ser")
+	const spotLightCameraHelper1 = new THREE.CameraHelper(spotLight1.shadow.camera);
+	spotLightCameraHelper1.visible = false;
+	ri.scene.add(spotLightCameraHelper1);
+
+	//** SPOTLIGHT (penumbra = skarpe kanter dersom 0, mer diffus ved økende verdi):
+	const spotLight2 = new THREE.SpotLight(0xffffff, 0.5, 500, Math.PI*0.3, 0, 0);
+	spotLight2.visible = true;
+	spotLight2.castShadow = true;
+	spotLight2.shadow.camera.near = 10;
+	spotLight2.shadow.camera.far = 30;
+	spotLight2.position.set(-13, 3.5, -2);
+	spotLight2.target.position.set(-100,0,0)
+	ri.scene.add(spotLight2);
+	// Viser lyskilden:
+	const spotLightHelper2 = new THREE.SpotLightHelper( spotLight2 );
+	spotLightHelper2.visible = false;
+	ri.scene.add( spotLightHelper2 );
+	// Viser lyskildekamera (hva lyskilden "ser")
+	const spotLightCameraHelper2 = new THREE.CameraHelper(spotLight2.shadow.camera);
+	spotLightCameraHelper2.visible = false;
+	ri.scene.add(spotLightCameraHelper2);
+	window.onkeydown = function(event) {
+		if(event.code === "Digit8"){
+			spotLightCameraHelper1.visible = !spotLightCameraHelper1.visible
+			spotLightHelper1.visible = !spotLightHelper1.visible;
+			spotLightCameraHelper2.visible = !spotLightCameraHelper2.visible
+			spotLightHelper2.visible = !spotLightHelper2.visible;
+
+		}
+		if(event.code === "Digit9"){
+			directionalLightHelper.visible = !directionalLightHelper.visible;
+			directionalLightCamera.visible = !directionalLightCamera.visible
+			light1Helper.visible = !light1Helper.visible
+			light1Camera.visible = !light1Camera.visible
+		}
+	}
 }
 
 function animate(currentTime) {
